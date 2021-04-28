@@ -57,16 +57,20 @@
 	</style>
 </head>
 <body>
+	// choosing input file
 	<input type="file" name="inputfile" id="inputfile"><br>
+	// button for start exercise
 	<div><button id="btn">Start exercise</button></div>
+	// balloon animation
 	<div class="balloon"></div>
 <audio>
 	<source class="track" src="" type="audio/mpeg">
 </audio>
 <script src="http://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <script src="https://sdk.amazonaws.com/js/aws-sdk-2.132.0.min.js"></script>
+	
 <script>
-var inputText = "";
+var inputText = "";	// edit this for text in amazon polly
 var file = new File(["foo"], "SSML breathing exercise.txt", {
   type: "text/plain",
 });
