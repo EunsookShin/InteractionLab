@@ -3,91 +3,111 @@
 <head>
 	<title></title>
 	<style>
-		figure.zoom {
-		  background-position: 50% 50%;
-		  position: relative;
-		  width: 300px;
-		  overflow: hidden;
-		  cursor: zoom-in;
+		body { margin:100px; background:hsl(70, 31%, 85%); text-align:center; }
+
+		.balloon {
+		  display:inline-block;
+		  width:140px;
+		  height:165px;
+		  background:hsl(215,50%,65%);
+		  border-radius:80%;
+		  position:relative;
+		  box-shadow:inset -10px -10px 0 rgba(0,0,0,0.07);
+		  margin:20px 30px;
+		  transition:transform 0.5s ease;
+		  z-index:10;
+		  /*animation:balloons 6s ease-in-out infinite;*/
+		  animation:grow 6s ease-out infinite;
+		  transform-origin:bottom center;
 		}
 
-		figure.zoom img {
-		  transition: opacity 0.2s;
-		  display: block;
-		  width: 100%;
+		@keyframes balloons {
+		  0%,100%{ transform:translateY(0) rotate(-4deg); }
+		  50%{ transform:translateY(-25px) rotate(4deg); height: 350px; width: 320px; }
 		}
+
+		@keyframes grow {
+		  50% { height: 350px; width: 320px;};
+
+		}
+
+		.balloon:before {
+		  content:"▲";
+		  font-size:25px;
+		  color:hsl(215,30%,50%);
+		  display:block;
+		  text-align:center;
+		  width:100%;
+		  position:absolute;
+		  bottom:-18px;
+		  z-index:-100;
+		}
+
+		.balloon:after {
+		  display:inline-block; top:153px;
+		  position:absolute;
+		  height:250px;
+		  width:1px;
+		  margin:0 auto;
+		  background:rgba(0,0,0,0.2); 
+		}
+
+		.balloon:nth-child(2){ background:hsl(245,40%,65%); animation-duration:3.5s; }
+		.balloon:nth-child(2):before { color:hsl(245,40%,65%);  }
 	</style>
 </head>
-
 <body>
-<figure class="zoom" onclick="zoom(event)" style="background-image: url(image.png)">
-	<img src="image.png" />
-</figure>
+	<input type="file" name="inputfile" id="inputfile"><br>
+	<div><button id="btn">Start exercise</button></div>
+	<div class="balloon"></div>
+<audio>
+	<source class="track" src="" type="audio/mpeg">
+</audio>
+<script src="http://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.132.0.min.js"></script>
 <script>
-	var clicked = false;
-	function zoom(e){
-		var image = document.querySelector("img");
-		var zoomer = e.currentTarget;
-		if(clicked) {
-			zoomer.style.backgroundPosition = 50 + '% ' + 50 + '%';
-		  	image.style.opacity = 1;
-			clicked = false;
-		  	zoomer.style.cursor = "zoom-in";
+var inputText = "";
+var file = new File(["foo"], "SSML breathing exercise.txt", {
+  type: "text/plain",
+});
+document.getElementById('inputfile').addEventListener('change', function() {
+        var fr=new FileReader();
+        fr.onload=function(){
+            inputText=fr.result;
+        }
+        console.log(this.files[0]);
+        console.log(file);
+        fr.readAsText(file);
+    })
+document.querySelector("#btn").onclick = function() {
+	AWS.config.accessKeyId = 'AKIAXZDTSGEJFTWVTZF3';
+	AWS.config.secretAccessKey = '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';
+	AWS.config.region = 'us-west-2';
+
+	var polly = new AWS.Polly();
+	var params = {
+		OutputFormat: "mp3",
+		Text: inputText,
+		TextType: "ssml",
+		VoiceId: "Salli"
+	};
+
+	polly.synthesizeSpeech(params, function(err, data) {
+		if(err) {
+			console.log(err, err.stack);
 		}
 		else {
-			e.offsetX ? offsetX = e.offsetX : offsetX = e.pageX
-			e.offsetY ? offsetY = e.offsetY : offsetY = e.pageY
-			x = offsetX/zoomer.offsetWidth*100
-			y = offsetY/zoomer.offsetHeight*100
-			zoomer.style.backgroundPosition = x + '% ' + y + '%';
-			clicked = true;
-		  	image.style.opacity = 0;
-		  	zoomer.style.cursor = "zoom-out";
+			var uInt8Array = new Uint8Array(data.AudioStream);
+			var arrayBuffer = uInt8Array.buffer;
+			var blob = new Blob([arrayBuffer]);
+
+			var audio = $('audio');
+			var url = URL.createObjectURL(blob);
+			audio[0].src = url;
+			audio[0].play();
 		}
-	}
+	});
+};
 </script>
 </body>
 </html>
-
-
-<!-- 
-<!DOCTYPE html>
-<html>
-<head>
-	<title></title>
-	<style>
-		figure.zoom {
-		  background-position: 50% 50%;
-		  position: relative;
-		  width: 300px;
-		  overflow: hidden;
-		  cursor: zoom-in;
-		}
-		figure.zoom img:hover {
-		  opacity: 0;
-		}
-		figure.zoom img {
-		  transition: opacity 0.5s;
-		  display: block;
-		  width: 100%;
-		}
-	</style>
-</head>
-
-<body>
-<figure class="zoom" onmousemove="zoom(event)" style="background-image: url(image.png)">
-	<img src="image.png" />
-</figure>
-<script>
-	function zoom(e){
-		var zoomer = e.currentTarget;
-		e.offsetX ? offsetX = e.offsetX : offsetX = e.pageX
-		e.offsetY ? offsetY = e.offsetY : offsetX = e.pageX
-		x = offsetX/zoomer.offsetWidth*150
-		y = offsetY/zoomer.offsetHeight*150
-		zoomer.style.backgroundPosition = x + '% ' + y + '%';
-	}
-</script>
-</body>
-</html>
- -->
